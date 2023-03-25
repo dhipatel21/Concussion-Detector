@@ -51,6 +51,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
+DMA_HandleTypeDef hdma_i2c1_rx;
+DMA_HandleTypeDef hdma_i2c1_tx;
 
 UART_HandleTypeDef huart1;
 
@@ -61,6 +63,7 @@ UART_HandleTypeDef huart1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
@@ -82,7 +85,7 @@ int _write(int file, char *ptr, int len) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+//
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -91,33 +94,41 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+//
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+//
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  MX_I2C1_Init();
-  uint8_t writebuf[2] = {0x28, 0b10010111};
+  uint8_t writebuf[2] = {0x3D, 0b00000101}; // operation mode to accgyro
   HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, 1000);
-  uint8_t read_buf[6];
+
+  // accerlerometer config 0x08
+  // normal mode is 0b000  bandwidth ? 000 g range 2g 00
+//  writebuf[0] = 0x08;
+//  writebuf[1] = 0b00001101;
+//  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, 1000);
+
+  uint8_t read_buf[6] = {0};
   uint8_t addr[6];
+
   for (uint8_t i=0; i<6; ++i)
-	  addr[i] = 0x28 + i;
+	  addr[i] = 0x08 + i;
 
 //  char * data = "x raw: 90, y raw: 90, z raw: 100";
 
-  int16_t accel_data[3];
-  s16 x, y, z;
+
+  int16_t x, y, z;
 //  memcpy(test, data, sizeof(data));
 
   /* USER CODE END 2 */
@@ -126,13 +137,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  printf("Hello\n");
-//	  HAL_DELAY(500);
+//	  HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, addr, 1, 1000);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[0], 1, 1000);
+
+	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[0], 1, 1000);
+	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[0], 6, 1000);
 
 	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[1], 1, 1000);
 	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[1], 1, 1000);
@@ -157,9 +168,9 @@ int main(void)
 //	  y = y/16448.0;
 //	  z = z/16448.0;
 
-	  accel_data[0] = x;
-	  accel_data[1] = y;
-	  accel_data[2] = z;
+//	  accel_data[0] = x;
+//	  accel_data[1] = y;
+//	  accel_data[2] = z;
 
 //	  HAL_Delay(500);
 
@@ -170,10 +181,11 @@ int main(void)
 	  HAL_Delay(500);
 //	  	 	  HAL_UART_Transmit(&huart1, test, sizeof (test), 1000);
 //	  	 	  HAL_UART_Transmit(&huart1, test, sizeof (test), 1000);
-	  //	 	  printf("x axis %d raw, %.2f Gs\n", x, x/16448.0);
-	  //	 	  printf("y axis %d raw, %.2f Gs\n", y, y/16448.0);
-	  //	 	  printf("z axis %d raw, %.2f Gs\n", z, z/16448.0);
+	  printf("x axis %d raw, %.2f Gs\n", x, x/16448.0);
+	  printf("y axis %d raw, %.2f Gs\n", y, y/16448.0);
+	  printf("z axis %d raw, %.2f Gs\n", z, z/16448.0);
   }
+
   /* USER CODE END 3 */
 }
 
@@ -301,6 +313,25 @@ static void MX_USART1_UART_Init(void)
   /* USER CODE BEGIN USART1_Init 2 */
 
   /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
+  /* DMA1_Channel7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
 
 }
 
