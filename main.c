@@ -110,7 +110,11 @@ int main(void)
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t writebuf[2] = {0x3D, 0b00000101}; // operation mode to accgyro
+  uint8_t writebuf[2] = {0x3D, 0b00001000}; // operation mode to imu fusion mode
+  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, 1000);
+
+  writebuf[0] = 0x3B;
+  writebuf[1] = 0b00000001; // operation units to m/s^2
   HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, 1000);
 
   // accerlerometer config 0x08
@@ -123,9 +127,11 @@ int main(void)
   uint8_t addr[6];
 
   for (uint8_t i=0; i<6; ++i)
-	  addr[i] = 0x08 + i;
+	  addr[i] = 0x28 + i;
 
 //  char * data = "x raw: 90, y raw: 90, z raw: 100";
+
+  uint16_t accel_data[3] = {0};
 
 
   int16_t x, y, z;
@@ -164,13 +170,13 @@ int main(void)
 	  y = (read_buf[3]<<8) + read_buf[2];
 	  z = (read_buf[5]<<8) + read_buf[4];
 
-//	  x = x/16448.0;
-//	  y = y/16448.0;
-//	  z = z/16448.0;
+	  x = abs(x);
+	  y = abs(y);
+	  z = abs(z);
 
-//	  accel_data[0] = x;
-//	  accel_data[1] = y;
-//	  accel_data[2] = z;
+	  accel_data[0] = x;
+	  accel_data[1] = y;
+	  accel_data[2] = z;
 
 //	  HAL_Delay(500);
 
@@ -178,12 +184,12 @@ int main(void)
 
 //	  HAL_UART_Transmit(&huart1, (uint8_t*)data, strlen(data), 1000);
 
-	  HAL_Delay(500);
+	  HAL_Delay(100);
 //	  	 	  HAL_UART_Transmit(&huart1, test, sizeof (test), 1000);
 //	  	 	  HAL_UART_Transmit(&huart1, test, sizeof (test), 1000);
-	  printf("x axis %d raw, %.2f Gs\n", x, x/16448.0);
-	  printf("y axis %d raw, %.2f Gs\n", y, y/16448.0);
-	  printf("z axis %d raw, %.2f Gs\n", z, z/16448.0);
+	  printf("x axis %d\n", x);
+	  printf("y axis %d\n", y);
+	  printf("z axis %d\n", z);
   }
 
   /* USER CODE END 3 */
@@ -351,22 +357,6 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : VCP_TX_Pin */
-  GPIO_InitStruct.Pin = VCP_TX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-  HAL_GPIO_Init(VCP_TX_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : VCP_RX_Pin */
-  GPIO_InitStruct.Pin = VCP_RX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF3_USART2;
-  HAL_GPIO_Init(VCP_RX_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD3_Pin */
   GPIO_InitStruct.Pin = LD3_Pin;
