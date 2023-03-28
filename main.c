@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
+#include "math.h"
 //#include "stm32f4xx_hal_def.h"
 //#include "stm32l412xx.h"
 //#include "stm32l4xx_hal_conf.h"
@@ -110,6 +111,8 @@ int main(void)
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+
+// ------------------ SEND CODE ------------------------
   uint8_t writebuf[2] = {0x3D, 0b00001100}; // operation mode to ndof fusion mode
   HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
 
@@ -117,28 +120,14 @@ int main(void)
   writebuf[1] = 0b00000001; // selected units to mg and output format in Windows
   HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
 
-  // accerlerometer config 0x08
-  // normal mode is 0b000  bandwidth ? 000 g range 2g 00
-//  writebuf[0] = 0x08;
-//  writebuf[1] = 0b00001101;
-//  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, 1000);
-
   uint8_t read_buf[6] = {0};
   uint8_t addr[6];
-
-//  for (uint8_t i=0; i<6; ++i)
-//	  addr[i] = 0x28 + i;
 
   for (uint8_t i=0; i<6; ++i)
   	  addr[i] = 0x28 + i;
 
-//  char * data = "x raw: 90, y raw: 90, z raw: 100";
-
-//  uint8_t accel_data[3] = {0};
-
 
   int16_t x, y, z;
-//  memcpy(test, data, sizeof(data));
 
   /* USER CODE END 2 */
 
@@ -193,15 +182,52 @@ int main(void)
 	  HAL_UART_Transmit(&huart1, read_buf, sizeof(read_buf), HAL_MAX_DELAY);
 
 	  HAL_Delay(500);
-//	  	 	  HAL_UART_Transmit(&huart1, test, sizeof (test), 1000);
-//	  	 	  HAL_UART_Transmit(&huart1, test, sizeof (test), 1000);
-//	  printf("x axis %d\n", x);
-//	  printf("y axis %d\n", y);
-//	  printf("z axis %d\n", z);
   }
 
   /* USER CODE END 3 */
 }
+
+
+// ------------------ SEND CODE ------------------------
+
+
+// ------------------RECEIVE CODE -----------------------
+//  uint8_t read_buf[6];
+//  int16_t x, y, z;
+//  int64_t accel;
+//
+//  /* USER CODE END 2 */
+//
+//  /* Infinite loop */
+//  /* USER CODE BEGIN WHILE */
+//  while (1)
+//  {
+//    /* USER CODE END WHILE */
+//
+//    /* USER CODE BEGIN 3 */
+//
+//	  if (HAL_UART_Init(&huart1) != HAL_OK) {
+//		  printf("failed");
+//		  return;
+//	  }
+//
+//	  HAL_UART_Receive(&huart1, read_buf, sizeof(read_buf), 100);
+//
+//	  x = (read_buf[1]<<8) + read_buf[0];
+//	  y = (read_buf[3]<<8) + read_buf[2];
+//	  z = (read_buf[5]<<8) + read_buf[4];
+//
+//	  accel = x*x + y*y + z*z;
+//	  accel = sqrt(accel);
+//
+//	  HAL_Delay(500);
+//  }
+//
+//  /* USER CODE END 3 */
+//}
+
+// ------------------RECEIVE CODE -----------------------
+
 
 /**
   * @brief System Clock Configuration
