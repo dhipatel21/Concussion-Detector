@@ -110,12 +110,12 @@ int main(void)
   MX_I2C1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t writebuf[2] = {0x3D, 0b00001000}; // operation mode to imu fusion mode
-  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, 1000);
+  uint8_t writebuf[2] = {0x3D, 0b00001100}; // operation mode to ndof fusion mode
+  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
 
   writebuf[0] = 0x3B;
-  writebuf[1] = 0b00000001; // operation units to m/s^2
-  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, 1000);
+  writebuf[1] = 0b00000001; // selected units to mg and output format in Windows
+  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
 
   // accerlerometer config 0x08
   // normal mode is 0b000  bandwidth ? 000 g range 2g 00
@@ -126,12 +126,15 @@ int main(void)
   uint8_t read_buf[6] = {0};
   uint8_t addr[6];
 
+//  for (uint8_t i=0; i<6; ++i)
+//	  addr[i] = 0x28 + i;
+
   for (uint8_t i=0; i<6; ++i)
-	  addr[i] = 0x28 + i;
+  	  addr[i] = 0x28 + i;
 
 //  char * data = "x raw: 90, y raw: 90, z raw: 100";
 
-  uint16_t accel_data[3] = {0};
+//  uint8_t accel_data[3] = {0};
 
 
   int16_t x, y, z;
@@ -148,48 +151,53 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[0], 1, 1000);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[0], 6, 1000);
+	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[0], 1, HAL_MAX_DELAY);
+	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[0], 6, HAL_MAX_DELAY);
 
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[1], 1, 1000);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[1], 1, 1000);
+	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[1], 1, HAL_MAX_DELAY);
+	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[1], 1, HAL_MAX_DELAY);
 
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[2], 1, 1000);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[2], 1, 1000);
+	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[2], 1, HAL_MAX_DELAY);
+	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[2], 1, HAL_MAX_DELAY);
 
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[3], 1, 1000);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[3], 1, 1000);
+	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[3], 1, HAL_MAX_DELAY);
+	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[3], 1, HAL_MAX_DELAY);
 
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[4], 1, 1000);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[4], 1, 1000);
+	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[4], 1, HAL_MAX_DELAY);
+	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[4], 1, HAL_MAX_DELAY);
 
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[5], 1, 1000);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[5], 1, 1000);
+	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[5], 1, HAL_MAX_DELAY);
+	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[5], 1, HAL_MAX_DELAY);
 
 	  x = (read_buf[1]<<8) + read_buf[0];
 	  y = (read_buf[3]<<8) + read_buf[2];
 	  z = (read_buf[5]<<8) + read_buf[4];
 
-	  x = abs(x);
-	  y = abs(y);
-	  z = abs(z);
+//	  x = abs(x);
+//	  y = abs(y);
+//	  z = abs(z);
 
-	  accel_data[0] = x;
-	  accel_data[1] = y;
-	  accel_data[2] = z;
+//	  accel_data[0] = x;
+//	  accel_data[1] = y;
+//	  accel_data[2] = z;
 
 //	  HAL_Delay(500);
 
 //	  HAL_UART_Transmit_IT(&huart1, test, sizeof(data));
 
-//	  HAL_UART_Transmit(&huart1, (uint8_t*)data, strlen(data), 1000);
+	  if (HAL_UART_Init(&huart1) != HAL_OK) {
+		  printf("failed");
+		  return;
+	  }
 
-	  HAL_Delay(100);
+	  HAL_UART_Transmit(&huart1, read_buf, sizeof(read_buf), HAL_MAX_DELAY);
+
+	  HAL_Delay(500);
 //	  	 	  HAL_UART_Transmit(&huart1, test, sizeof (test), 1000);
 //	  	 	  HAL_UART_Transmit(&huart1, test, sizeof (test), 1000);
-	  printf("x axis %d\n", x);
-	  printf("y axis %d\n", y);
-	  printf("z axis %d\n", z);
+//	  printf("x axis %d\n", x);
+//	  printf("y axis %d\n", y);
+//	  printf("z axis %d\n", z);
   }
 
   /* USER CODE END 3 */
