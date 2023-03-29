@@ -113,88 +113,29 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 // ------------------ SEND CODE ------------------------
-  uint8_t writebuf[2] = {0x3D, 0b00001100}; // operation mode to ndof fusion mode
-  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
-
-  writebuf[0] = 0x3B;
-  writebuf[1] = 0b00000001; // selected units to mg and output format in Windows
-  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
-
-  uint8_t read_buf[6] = {0};
-  uint8_t addr[6];
-
-  for (uint8_t i=0; i<6; ++i)
-  	  addr[i] = 0x28 + i;
-
-
-  int16_t x, y, z;
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-//	  HAL_Delay(500);
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[0], 1, HAL_MAX_DELAY);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[0], 6, HAL_MAX_DELAY);
-
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[1], 1, HAL_MAX_DELAY);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[1], 1, HAL_MAX_DELAY);
-
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[2], 1, HAL_MAX_DELAY);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[2], 1, HAL_MAX_DELAY);
-
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[3], 1, HAL_MAX_DELAY);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[3], 1, HAL_MAX_DELAY);
-
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[4], 1, HAL_MAX_DELAY);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[4], 1, HAL_MAX_DELAY);
-
-	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[5], 1, HAL_MAX_DELAY);
-	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[5], 1, HAL_MAX_DELAY);
-
-	  x = (read_buf[1]<<8) + read_buf[0];
-	  y = (read_buf[3]<<8) + read_buf[2];
-	  z = (read_buf[5]<<8) + read_buf[4];
-
-//	  x = abs(x);
-//	  y = abs(y);
-//	  z = abs(z);
-
-//	  accel_data[0] = x;
-//	  accel_data[1] = y;
-//	  accel_data[2] = z;
-
-//	  HAL_Delay(500);
-
-//	  HAL_UART_Transmit_IT(&huart1, test, sizeof(data));
-
-	  if (HAL_UART_Init(&huart1) != HAL_OK) {
-		  printf("failed");
-		  return;
-	  }
-
-	  HAL_UART_Transmit(&huart1, read_buf, sizeof(read_buf), HAL_MAX_DELAY);
-
-	  HAL_Delay(500);
-  }
-
-  /* USER CODE END 3 */
-}
-
-
-// ------------------ SEND CODE ------------------------
-
-
-// ------------------RECEIVE CODE -----------------------
-//  uint8_t read_buf[6];
-//  int16_t x, y, z;
-//  int64_t accel;
+//  uint8_t writebuf[2] = {0x3D, 0b00001100}; // operation mode to ndof fusion mode
+//  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
+//
+//  uint8_t calib_check[1] = {0};
+//  uint8_t calib_write[1] = {0x35};	// read calibration status
+//  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
+//  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
+//  while (calib_check[0] != 0b11111111) {
+//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
+//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
+//	  HAL_Delay(1000);
+//	  printf("calibrate");	// display on touchscreen that imu is being/needs to be calibrated
+//  }
+//
+//  writebuf[0] = 0x3B;
+//  writebuf[1] = 0b00000000; // selected units to m/s^2 and output format in Windows
+//  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
+//
+//  uint8_t read_buf[6] = {0};
+//  uint8_t addr[6];
+//
+//  for (uint8_t i=0; i<6; ++i)
+//  	  addr[i] = 0x28 + i;
 //
 //  /* USER CODE END 2 */
 //
@@ -202,29 +143,89 @@ int main(void)
 //  /* USER CODE BEGIN WHILE */
 //  while (1)
 //  {
+////	  HAL_Delay(500);
 //    /* USER CODE END WHILE */
 //
 //    /* USER CODE BEGIN 3 */
+//
+//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[0], 1, HAL_MAX_DELAY);
+//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[0], 1, HAL_MAX_DELAY);
+//
+//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[1], 1, HAL_MAX_DELAY);
+//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[1], 1, HAL_MAX_DELAY);
+//
+//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[2], 1, HAL_MAX_DELAY);
+//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[2], 1, HAL_MAX_DELAY);
+//
+//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[3], 1, HAL_MAX_DELAY);
+//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[3], 1, HAL_MAX_DELAY);
+//
+//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[4], 1, HAL_MAX_DELAY);
+//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[4], 1, HAL_MAX_DELAY);
+//
+//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[5], 1, HAL_MAX_DELAY);
+//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[5], 1, HAL_MAX_DELAY);
 //
 //	  if (HAL_UART_Init(&huart1) != HAL_OK) {
 //		  printf("failed");
 //		  return;
 //	  }
 //
-//	  HAL_UART_Receive(&huart1, read_buf, sizeof(read_buf), 100);
-//
-//	  x = (read_buf[1]<<8) + read_buf[0];
-//	  y = (read_buf[3]<<8) + read_buf[2];
-//	  z = (read_buf[5]<<8) + read_buf[4];
-//
-//	  accel = x*x + y*y + z*z;
-//	  accel = sqrt(accel);
+//	  HAL_UART_Transmit(&huart1, read_buf, sizeof(read_buf), HAL_MAX_DELAY);
 //
 //	  HAL_Delay(500);
 //  }
 //
 //  /* USER CODE END 3 */
 //}
+
+
+// ------------------ SEND CODE ------------------------
+
+
+// ------------------RECEIVE CODE -----------------------
+  uint8_t read_buf[6];
+  int16_t x, y, z;
+  int64_t accel;
+  double accel_data[3];
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
+
+	  if (HAL_UART_Init(&huart1) != HAL_OK) {
+		  printf("failed");
+		  return;
+	  }
+
+	  HAL_UART_Receive(&huart1, read_buf, sizeof(read_buf), 100);
+
+	  x = (read_buf[1]<<8) + read_buf[0];
+	  y = (read_buf[3]<<8) + read_buf[2];
+	  z = (read_buf[5]<<8) + read_buf[4];	// x, y, z units currently in m/s^2
+
+	  accel_data[0] = x;
+	  accel_data[1] = y;
+	  accel_data[2] = z;
+
+	  for (int i = 0; i < 3; i++){
+		  accel_data[i] *= accel_data[i] * 0.101972;
+	  }
+
+	  accel = x*x + y*y + z*z;
+	  accel = sqrt(accel);
+
+	  HAL_Delay(500);
+  }
+
+  /* USER CODE END 3 */
+}
 
 // ------------------RECEIVE CODE -----------------------
 
