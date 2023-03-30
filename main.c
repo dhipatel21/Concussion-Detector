@@ -23,9 +23,6 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "math.h"
-//#include "stm32f4xx_hal_def.h"
-//#include "stm32l412xx.h"
-//#include "stm32l4xx_hal_conf.h"
 #include "bno055.h"
 #include "stm32l4xx_hal_uart.h"
 /* USER CODE END Includes */
@@ -37,10 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-//#define SAD_W_M 0x3C
-//#define SAD_R_M 0x3D
 #define HAL_USART_MODULE_ENABLED
-//#define HAL_UART_MODULE_ENABLED
 #define I2C_WA 0x50
 #define I2C_RA 0x51
 /* USER CODE END PD */
@@ -74,8 +68,8 @@ static void MX_USART1_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 int _write(int file, char *ptr, int len) {
-	HAL_UART_Transmit(&huart1, (uint8_t*)ptr, len, HAL_MAX_DELAY);
-	return len;
+    HAL_UART_Transmit(&huart1, (uint8_t*)ptr, len, HAL_MAX_DELAY);
+    return len;
 }
 /* USER CODE END 0 */
 
@@ -117,25 +111,47 @@ int main(void)
 //  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
 //
 //  uint8_t calib_check[1] = {0};
-//  uint8_t calib_write[1] = {0x35};	// read calibration status
+//  uint8_t calib_write[1] = {0x35};    // read calibration status
+//  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
+//  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
+//  char calib_message[] = "calibrate imu";
+//  char calib_sys[] = "calibrate orientation";
+//  char calib_gyr[] = "calibrate gyroscope";
+//  char calib_acc[] = "calibrate accelerometer";
+//  char calib_mag[] = "calibrate magnetometer";
+//  char calib_complete[] = "calibration complete";
 //  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
 //  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
 //  while (calib_check[0] != 0b11111111) {
-//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
-//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
-//	  HAL_Delay(1000);
-//	  printf("calibrate");	// display on touchscreen that imu is being/needs to be calibrated
+//      HAL_UART_Transmit(&huart1, (uint8_t*) calib_message, sizeof(calib_message), HAL_MAX_DELAY);    // display on touchscreen that imu is being/needs to be calibrated
+//      if (calib_check[0] & 0b00000011) {
+//          HAL_UART_Transmit(&huart1, (uint8_t*) calib_sys, sizeof(calib_sys), HAL_MAX_DELAY);    // display on touchscreen that orientation is being/needs to be calibrated
+//      }
+//      if (calib_check[0] & 0b00001100) {
+//          HAL_UART_Transmit(&huart1, (uint8_t*) calib_gyr, sizeof(calib_gyr), HAL_MAX_DELAY);    // display on touchscreen that gyroscope is being/needs to be calibrated
+//      }
+//      if (calib_check[0] & 0b00110000) {
+//          HAL_UART_Transmit(&huart1, (uint8_t*) calib_acc, sizeof(calib_acc), HAL_MAX_DELAY);    // display on touchscreen that accelerometer is being/needs to be calibrated
+//      }
+//      if (calib_check[0] & 0b11000000) {
+//          HAL_UART_Transmit(&huart1, (uint8_t*) calib_mag, sizeof(calib_mag), HAL_MAX_DELAY);    // display on touchscreen that magnetometer is being/needs to be calibrated
+//      }
+//      HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
+//
+//      HAL_Delay(1000);
 //  }
+//  HAL_UART_Transmit(&huart1, (uint8_t*) calib_complete, sizeof(calib_complete), HAL_MAX_DELAY);    // display on touchscreen that imu is be calibrated
 //
 //  writebuf[0] = 0x3B;
-//  writebuf[1] = 0b00000000; // selected units to m/s^2 and output format in Windows
+//  writebuf[1] = 0b00000000;    // selected units to m/s^2 and output format in Windows
 //  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, writebuf, 2, HAL_MAX_DELAY);
 //
 //  uint8_t read_buf[6] = {0};
 //  uint8_t addr[6];
 //
 //  for (uint8_t i=0; i<6; ++i)
-//  	  addr[i] = 0x28 + i;
+//        addr[i] = 0x28 + i;
 //
 //  /* USER CODE END 2 */
 //
@@ -143,37 +159,36 @@ int main(void)
 //  /* USER CODE BEGIN WHILE */
 //  while (1)
 //  {
-////	  HAL_Delay(500);
 //    /* USER CODE END WHILE */
 //
 //    /* USER CODE BEGIN 3 */
 //
-//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[0], 1, HAL_MAX_DELAY);
-//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[0], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[0], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[0], 1, HAL_MAX_DELAY);
 //
-//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[1], 1, HAL_MAX_DELAY);
-//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[1], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[1], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[1], 1, HAL_MAX_DELAY);
 //
-//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[2], 1, HAL_MAX_DELAY);
-//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[2], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[2], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[2], 1, HAL_MAX_DELAY);
 //
-//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[3], 1, HAL_MAX_DELAY);
-//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[3], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[3], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[3], 1, HAL_MAX_DELAY);
 //
-//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[4], 1, HAL_MAX_DELAY);
-//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[4], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[4], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[4], 1, HAL_MAX_DELAY);
 //
-//	  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[5], 1, HAL_MAX_DELAY);
-//	  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[5], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &addr[5], 1, HAL_MAX_DELAY);
+//      HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &read_buf[5], 1, HAL_MAX_DELAY);
 //
-//	  if (HAL_UART_Init(&huart1) != HAL_OK) {
-//		  printf("failed");
-//		  return;
-//	  }
+//      if (HAL_UART_Init(&huart1) != HAL_OK) {
+//          printf("failed");
+//          return;
+//      }
 //
-//	  HAL_UART_Transmit(&huart1, read_buf, sizeof(read_buf), HAL_MAX_DELAY);
+//      HAL_UART_Transmit(&huart1, read_buf, sizeof(read_buf), HAL_MAX_DELAY);    // send x, y, z data (6 byte chunks)
 //
-//	  HAL_Delay(500);
+//      HAL_Delay(500);
 //  }
 //
 //  /* USER CODE END 3 */
@@ -186,9 +201,10 @@ int main(void)
 // ------------------RECEIVE CODE -----------------------
   uint8_t read_buf[6];
   int16_t x, y, z;
-  int64_t accel;
+  int32_t accel;
   double accel_data[3];
-
+  char concussion_message[] = "threshold exceeded. check for concussion";
+    
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -199,29 +215,35 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  if (HAL_UART_Init(&huart1) != HAL_OK) {
-		  printf("failed");
-		  return;
-	  }
+      if (HAL_UART_Init(&huart1) != HAL_OK) {
+          printf("failed");
+          return;
+      }
 
-	  HAL_UART_Receive(&huart1, read_buf, sizeof(read_buf), 100);
+      HAL_UART_Receive(&huart1, read_buf, sizeof(read_buf), 100);
 
-	  x = (read_buf[1]<<8) + read_buf[0];
-	  y = (read_buf[3]<<8) + read_buf[2];
-	  z = (read_buf[5]<<8) + read_buf[4];	// x, y, z units currently in m/s^2
+      x = (read_buf[1]<<8) + read_buf[0];
+      y = (read_buf[3]<<8) + read_buf[2];
+      z = (read_buf[5]<<8) + read_buf[4];    // x, y, z units currently in m/s^2
 
-	  accel_data[0] = x;
-	  accel_data[1] = y;
-	  accel_data[2] = z;
+      accel_data[0] = x;
+      accel_data[1] = y;
+      accel_data[2] = z;
 
-	  for (int i = 0; i < 3; i++){
-		  accel_data[i] *= accel_data[i] * 0.101972;
-	  }
+      for (int i = 0; i < 3; i++){
+          accel_data[i] *= accel_data[i] * 0.101972;    // convert m/s^2 to g
+      }
 
-	  accel = x*x + y*y + z*z;
-	  accel = sqrt(accel);
+      accel = x*x + y*y + z*z;
+      accel = sqrt(accel);
+      
+      if (accel >= 58) {    // check if threshold is met/exceeded; using 58 to account for rounding error
+          HAL_UART_Transmit(&huart1, (uint8_t*) concussion_message, sizeof(concussion_message), HAL_MAX_DELAY);
+          // activate buzzer
+          // make screen turn red
+      }
 
-	  HAL_Delay(500);
+      HAL_Delay(500);
   }
 
   /* USER CODE END 3 */
