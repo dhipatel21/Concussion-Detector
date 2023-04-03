@@ -204,7 +204,7 @@ int main(void)
   int32_t accel;
   double accel_data[3];
   char concussion_message[] = "threshold exceeded. check for concussion";
-    
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -236,7 +236,7 @@ int main(void)
 
       accel = x*x + y*y + z*z;
       accel = sqrt(accel);
-      
+
       if (accel >= 58) {    // check if threshold is met/exceeded; using 58 to account for rounding error
           HAL_UART_Transmit(&huart1, (uint8_t*) concussion_message, sizeof(concussion_message), HAL_MAX_DELAY);
           // activate buzzer
