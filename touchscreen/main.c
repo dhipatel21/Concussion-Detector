@@ -100,21 +100,71 @@ int main(void)
 
   // ------------------RECEIVE/SCREEN CODE -----------------------
 	uint8_t read_buf[6];
+	uint8_t calibration[1];
 	int16_t x, y, z;
 	int16_t black = HX8357_BLACK;
 	int16_t red = HX8357_RED;
-	int16_t xData = 100;
-	int16_t yData = 100;
+	int16_t blue = HX8357_BLUE;
+	int16_t green = HX8357_GREEN;
+	int16_t xData = 30;
+	int16_t yData = 15;
 	int32_t accel;
 	uint8_t flag = 0;
 	double accel_data[3];
-	char concussion_message[] = "threshold exceeded. check for concussion";
+	char concussion_message1[] = "threshold";
+	char concussion_message2[] = " exceeded";
+	char concussion_message3[] = "check for";
+	char concussion_message4[] = "concussion";
+	char concussion_message5[] = ":(";
 	char no_concussion[] = "no concussion detected";
+	char calib_message[] = "calibration";
+	char calib_message1[] = "check";
+	char orientation[] = "orientation: ";
+	char gyro[] = "gyroscope: ";
+	char acc[] = "accelerometer: ";
+	char mag[] = "magnetometer: ";
+	char check[] = "-";
 	GPIO_PinState button = 0;
+	HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 100);
 
 	LCD_begin(&hspi1);
 	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
-//	LCD_drawButton(&hspi1, );	// draw button in bottom right
+	LCD_drawString(&hspi1, xData, yData, calib_message, sizeof(calib_message), black, 4);
+	LCD_drawString(&hspi1, 80, 75, calib_message1, sizeof(calib_message1), black, 4);
+	LCD_drawString(&hspi1, 0, 150, orientation, sizeof(orientation), black, 3);
+	LCD_drawString(&hspi1, 0, 250, gyro, sizeof(gyro), black, 3);
+	LCD_drawString(&hspi1, 0, 350, acc, sizeof(acc), black, 3);
+	LCD_drawString(&hspi1, 0, 450, mag, sizeof(mag), black, 3);
+
+	while (calibration[0] != 0b11111111) {
+		HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 100);
+		if (((calibration[0] & 0b11000000) >> 6) == 0b11) {
+			LCD_drawString(&hspi1, 225, 140, check, sizeof(check), green, 5);
+		}
+		else {
+			LCD_drawString(&hspi1, 225, 140, check, sizeof(check), red, 5);
+		}
+		if (((calibration[0] & 0b00110000) >> 4) == 0b11) {
+			LCD_drawString(&hspi1, 190, 240, check, sizeof(check), green, 5);
+		}
+		else {
+			LCD_drawString(&hspi1, 190, 240, check, sizeof(check), red, 5);
+		}
+		if (((calibration[0] & 0b00001100) >> 2) == 0b11) {
+			LCD_drawString(&hspi1, 265, 340, check, sizeof(check), green, 5);
+		}
+		else {
+			LCD_drawString(&hspi1, 265, 340, check, sizeof(check), red, 5);
+		}
+		if ((calibration[0] & 0b00000011) == 0b11) {
+			LCD_drawString(&hspi1, 250, 440, check, sizeof(check), green, 5);
+		}
+		else {
+			LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
+		}
+		HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 100);
+	}
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -151,15 +201,21 @@ int main(void)
 			// activate buzzer for 3 secs after concussion detected
 			button = 0;
 			while (!button) {	// after concussion is detected, infinitely loop until blue button is pushed
-				LCD_drawString(&hspi1, x, y, concussion_message, sizeof(concussion_message), red, 5);
-				button = GPIO_ReadPin(GPIOB, GPIO_PIN_13);	// set blue button to PB13
+				LCD_drawString(&hspi1, xData, yData, concussion_message1, sizeof(concussion_message1), red, 5);
+				LCD_drawString(&hspi1, 20, 75, concussion_message2, sizeof(concussion_message2), red, 5);
+				LCD_drawString(&hspi1, 50, 175, concussion_message5, sizeof(concussion_message5), blue, 15);
+				LCD_drawString(&hspi1, 50, 400, concussion_message3, sizeof(concussion_message3), red, 4);
+				LCD_drawString(&hspi1, 50, 450, concussion_message4, sizeof(concussion_message4), red, 4);
+//				button = GPIO_ReadPin(GPIOB, GPIO_PIN_13);	// set blue button to PB13
 				HAL_Delay(50);
 			}
 			flag = 1;
 		}
 		if (flag) {
 			button = 0;
-			LCD_drawString(&hspi1, x, y, no_concussion, sizeof(no_concussion), black, 5);
+			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
+			LCD_drawString(&hspi1, xData, yData, no_concussion, sizeof(no_concussion), black, 5);
+			flag = 0;
 		}
 
 
