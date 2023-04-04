@@ -110,6 +110,7 @@ int main(void)
 	int16_t yData = 15;
 	int32_t accel;
 	uint8_t flag = 0;
+	uint8_t start = 0;
 	double accel_data[3];
 	char concussion_message1[] = "threshold";
 	char concussion_message2[] = " exceeded";
@@ -124,8 +125,11 @@ int main(void)
 	char acc[] = "accelerometer: ";
 	char mag[] = "magnetometer: ";
 	char check[] = "-";
+	char continue1[] = "touch anywhere";
+	char continue2[] = "to start";
 	GPIO_PinState button = 0;
-	HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 100);
+//	HAL_UART_Transmit(&huart4, (uint8_t*) gyro, sizeof(gyro), 100);
+	HAL_UART_Receive(&huart4, calibration, 1, 100);
 
 	LCD_begin(&hspi1);
 	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
@@ -135,6 +139,31 @@ int main(void)
 	LCD_drawString(&hspi1, 0, 250, gyro, sizeof(gyro), black, 3);
 	LCD_drawString(&hspi1, 0, 350, acc, sizeof(acc), black, 3);
 	LCD_drawString(&hspi1, 0, 450, mag, sizeof(mag), black, 3);
+
+	if (((calibration[0] & 0b11000000) >> 6) == 0b11) {
+		LCD_drawString(&hspi1, 225, 140, check, sizeof(check), green, 5);
+	}
+	else {
+		LCD_drawString(&hspi1, 225, 140, check, sizeof(check), red, 5);
+	}
+	if (((calibration[0] & 0b00110000) >> 4) == 0b11) {
+		LCD_drawString(&hspi1, 190, 240, check, sizeof(check), green, 5);
+	}
+	else {
+		LCD_drawString(&hspi1, 190, 240, check, sizeof(check), red, 5);
+	}
+	if (((calibration[0] & 0b00001100) >> 2) == 0b11) {
+		LCD_drawString(&hspi1, 265, 340, check, sizeof(check), green, 5);
+	}
+	else {
+		LCD_drawString(&hspi1, 265, 340, check, sizeof(check), red, 5);
+	}
+	if ((calibration[0] & 0b00000011) == 0b11) {
+		LCD_drawString(&hspi1, 250, 440, check, sizeof(check), green, 5);
+	}
+	else {
+		LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
+	}
 
 	while (calibration[0] != 0b11111111) {
 		HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 100);
@@ -162,8 +191,17 @@ int main(void)
 		else {
 			LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
 		}
-		HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 100);
 	}
+
+	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
+	LCD_drawString(&hspi1, xData, 225, continue1, sizeof(continue1), black, 3);
+	LCD_drawString(&hspi1, 80, 255, continue2, sizeof(continue2), black, 3);
+
+	while(!start) {
+		// touch screen - implement touch anywhere to start
+		;;
+	}
+	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
 
   /* USER CODE END 2 */
 
@@ -200,6 +238,7 @@ int main(void)
 		if (accel >= 58) {    // check if threshold is met/exceeded; using 58 to account for rounding error
 			// activate buzzer for 3 secs after concussion detected
 			button = 0;
+			HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 100);
 			while (!button) {	// after concussion is detected, infinitely loop until blue button is pushed
 				LCD_drawString(&hspi1, xData, yData, concussion_message1, sizeof(concussion_message1), red, 5);
 				LCD_drawString(&hspi1, 20, 75, concussion_message2, sizeof(concussion_message2), red, 5);
@@ -325,7 +364,7 @@ static void MX_UART4_Init(void)
 
   /* USER CODE END UART4_Init 1 */
   huart4.Instance = UART4;
-  huart4.Init.BaudRate = 115200;
+  huart4.Init.BaudRate = 9600;
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;
