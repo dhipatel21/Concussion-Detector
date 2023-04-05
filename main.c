@@ -114,34 +114,17 @@ int main(void)
   uint8_t calib_write[1] = {0x35};    // read calibration status
   HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
   HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
-//  char calib_message[] = "calibrate imu";
-//  char calib_sys[] = "calibrate orientation";
-//  char calib_gyr[] = "calibrate gyroscope";
-//  char calib_acc[] = "calibrate accelerometer";
-//  char calib_mag[] = "calibrate magnetometer";
   HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
   HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
   while (calib_check[0] != 0b11111111) {
       HAL_UART_Transmit(&huart1, (uint8_t*) calib_check, 1, HAL_MAX_DELAY);    // send calib_check register
-
-//      HAL_UART_Transmit(&huart1, (uint8_t*) calib_message, sizeof(calib_message), HAL_MAX_DELAY);    // display on touchscreen that imu is being/needs to be calibrated
-//      if (((calib_check[0] & 0b11000000) >> 6) != 0b11) {
-//          HAL_UART_Transmit(&huart1, (uint8_t*) calib_sys, sizeof(calib_sys), HAL_MAX_DELAY);    // display on touchscreen that orientation is being/needs to be calibrated
-//      }
-//      if (((calib_check[0] & 0b00110000) >> 4) != 0b11) {
-//          HAL_UART_Transmit(&huart1, (uint8_t*) calib_gyr, sizeof(calib_gyr), HAL_MAX_DELAY);    // display on touchscreen that gyroscope is being/needs to be calibrated
-//      }
-//      if (((calib_check[0] & 0b00001100) >> 2) != 0b11) {
-//          HAL_UART_Transmit(&huart1, (uint8_t*) calib_acc, sizeof(calib_acc), HAL_MAX_DELAY);    // display on touchscreen that accelerometer is being/needs to be calibrated
-//      }
-//      if ((calib_check[0] & 0b00000011) != 0b11) {
-//          HAL_UART_Transmit(&huart1, (uint8_t*) calib_mag, sizeof(calib_mag), HAL_MAX_DELAY);    // display on touchscreen that magnetometer is being/needs to be calibrated
-//      }
       HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
       HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
 
       HAL_Delay(1000);
   }
+
+  HAL_Delay(10000);
 
   writebuf[0] = 0x3B;
   writebuf[1] = 0b00000000;    // selected units to m/s^2 and output format in Windows
