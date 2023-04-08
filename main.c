@@ -112,8 +112,7 @@ int main(void)
 
   uint8_t calib_check[1] = {0};
   uint8_t calib_write[1] = {0x35};    // read calibration status
-  HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
-  HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
+  uint8_t done[3] = {0xFF, 0xFF, 0xFF};
   HAL_I2C_Master_Transmit(&hi2c1, I2C_WA, &calib_write[0], 1, HAL_MAX_DELAY);
   HAL_I2C_Master_Receive(&hi2c1, I2C_RA, &calib_check[0], 1, HAL_MAX_DELAY);
   while (calib_check[0] != 0b11111111) {
@@ -123,6 +122,8 @@ int main(void)
 
       HAL_Delay(1000);
   }
+
+//  HAL_UART_Transmit(&huart1, done, sizeof(done), HAL_MAX_DELAY);    // 3 bytes marking end of calibration send data
 
   HAL_Delay(10000);
 
