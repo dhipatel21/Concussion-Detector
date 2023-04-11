@@ -25,7 +25,7 @@
 #include "math.h"
 #include "stm32l4xx_hal_uart.h"
 #include "LCD.h"
-//#include "TS.h"
+#include "TS.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,6 +44,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart4;
@@ -57,6 +59,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_UART4_Init(void);
+static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -89,84 +92,75 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+//  uint8_t read_buf[6];
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_UART4_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
   // ------------------RECEIVE/SCREEN CODE -----------------------
-	uint8_t read_buf[6];
-	uint8_t calibration[1];
+  	uint8_t read_buf[6];
+	uint8_t calibration[6] = {0};
+//	uint8_t end_calib[3] = {0};
 	int16_t x, y, z;
 	int16_t black = HX8357_BLACK;
 	int16_t red = HX8357_RED;
 	int16_t blue = HX8357_BLUE;
 	int16_t green = HX8357_GREEN;
+	int16_t magenta = HX8357_MAGENTA;
 	int16_t xData = 30;
 	int16_t yData = 15;
-	int32_t accel;
+	uint32_t accel;
+	uint32_t max = 0;
 	uint8_t flag = 0;
 	uint8_t start = 0;
+	double pressure;
 	double accel_data[3];
-	char concussion_message1[] = "threshold";
-	char concussion_message2[] = " exceeded";
-	char concussion_message3[] = "check for";
-	char concussion_message4[] = "concussion";
-	char concussion_message5[] = ":(";
-	char no_concussion[] = "no concussion detected";
-	char calib_message[] = "calibration";
-	char calib_message1[] = "check";
-	char orientation[] = "orientation: ";
-	char gyro[] = "gyroscope: ";
-	char acc[] = "accelerometer: ";
-	char mag[] = "magnetometer: ";
-	char check[] = "-";
-	char continue1[] = "touch anywhere";
-	char continue2[] = "to start";
+	unsigned char calibrated[] = "calibrated";
+	unsigned char concussion_message1[] = "threshold";
+	unsigned char concussion_message2[] = " exceeded";
+	unsigned char concussion_message3[] = "check for";
+	unsigned char concussion_message4[] = "concussion";
+	unsigned char concussion_message5[] = ":()";
+	unsigned char calib_message[] = "calibration";
+	unsigned char calib_message1[] = "check";
+	unsigned char orientation[] = "orientation: ";
+	unsigned char gyro[] = "gyroscope: ";
+	unsigned char acc[] = "accelerometer: ";
+	unsigned char mag[] = "magnetometer: ";
+	unsigned char check[] = "-";
+	unsigned char continue1[] = "touch anywhere";
+	unsigned char continue2[] = "to start";
+	unsigned char running[] = "running...";
+	unsigned char highest[] = "highest";
+	unsigned char highest1[] = "acceleration";
+	unsigned char highest2[] = "so far:";
+	unsigned char g = 'g';
+	unsigned char current[] = "current";
+	unsigned char current2[] = "acceleration:";
+	unsigned char buffer[3];
 	GPIO_PinState button = 0;
 //	HAL_UART_Transmit(&huart4, (uint8_t*) gyro, sizeof(gyro), 100);
-	HAL_UART_Receive(&huart4, calibration, 1, 100);
+	HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 1000);
+//	HAL_UART_Receive(&huart4, end_calib, sizeof(end_calib), 100);
 
 	LCD_begin(&hspi1);
 	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
-	LCD_drawString(&hspi1, xData, yData, calib_message, sizeof(calib_message), black, 4);
-	LCD_drawString(&hspi1, 80, 75, calib_message1, sizeof(calib_message1), black, 4);
-	LCD_drawString(&hspi1, 0, 150, orientation, sizeof(orientation), black, 3);
-	LCD_drawString(&hspi1, 0, 250, gyro, sizeof(gyro), black, 3);
-	LCD_drawString(&hspi1, 0, 350, acc, sizeof(acc), black, 3);
-	LCD_drawString(&hspi1, 0, 450, mag, sizeof(mag), black, 3);
+	if (calibration[1] > 0x00 || calibration[2] > 0x00 || calibration[3] > 0x00 || calibration[4] > 0x00 || calibration[5] > 0x00) {
+		LCD_drawString(&hspi1, 40, 240, calibrated, sizeof(calibrated), green, 4);
+	}
+	else {
+		LCD_drawString(&hspi1, xData, yData, calib_message, sizeof(calib_message), black, 4);
+		LCD_drawString(&hspi1, 80, 75, calib_message1, sizeof(calib_message1), black, 4);
+		LCD_drawString(&hspi1, 0, 150, orientation, sizeof(orientation), black, 3);
+		LCD_drawString(&hspi1, 0, 250, gyro, sizeof(gyro), black, 3);
+		LCD_drawString(&hspi1, 0, 350, acc, sizeof(acc), black, 3);
+		LCD_drawString(&hspi1, 0, 450, mag, sizeof(mag), black, 3);
 
-	if (((calibration[0] & 0b11000000) >> 6) == 0b11) {
-		LCD_drawString(&hspi1, 225, 140, check, sizeof(check), green, 5);
-	}
-	else {
-		LCD_drawString(&hspi1, 225, 140, check, sizeof(check), red, 5);
-	}
-	if (((calibration[0] & 0b00110000) >> 4) == 0b11) {
-		LCD_drawString(&hspi1, 190, 240, check, sizeof(check), green, 5);
-	}
-	else {
-		LCD_drawString(&hspi1, 190, 240, check, sizeof(check), red, 5);
-	}
-	if (((calibration[0] & 0b00001100) >> 2) == 0b11) {
-		LCD_drawString(&hspi1, 265, 340, check, sizeof(check), green, 5);
-	}
-	else {
-		LCD_drawString(&hspi1, 265, 340, check, sizeof(check), red, 5);
-	}
-	if ((calibration[0] & 0b00000011) == 0b11) {
-		LCD_drawString(&hspi1, 250, 440, check, sizeof(check), green, 5);
-	}
-	else {
-		LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
-	}
-
-	while (calibration[0] != 0b11111111) {
-		HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 100);
 		if (((calibration[0] & 0b11000000) >> 6) == 0b11) {
 			LCD_drawString(&hspi1, 225, 140, check, sizeof(check), green, 5);
 		}
@@ -191,18 +185,53 @@ int main(void)
 		else {
 			LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
 		}
-	}
 
+		while (calibration[0] != 0b11111111) {
+			HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 1000);
+			if (((calibration[0] & 0b11000000) >> 6) == 0b11) {
+				LCD_drawString(&hspi1, 225, 140, check, sizeof(check), green, 5);
+			}
+			else {
+				LCD_drawString(&hspi1, 225, 140, check, sizeof(check), red, 5);
+			}
+			if (((calibration[0] & 0b00110000) >> 4) == 0b11) {
+				LCD_drawString(&hspi1, 190, 240, check, sizeof(check), green, 5);
+			}
+			else {
+				LCD_drawString(&hspi1, 190, 240, check, sizeof(check), red, 5);
+			}
+			if (((calibration[0] & 0b00001100) >> 2) == 0b11) {
+				LCD_drawString(&hspi1, 265, 340, check, sizeof(check), green, 5);
+			}
+			else {
+				LCD_drawString(&hspi1, 265, 340, check, sizeof(check), red, 5);
+			}
+			if ((calibration[0] & 0b00000011) == 0b11) {
+				LCD_drawString(&hspi1, 250, 440, check, sizeof(check), green, 5);
+			}
+			else {
+				LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
+			}
+		}
+	}
+//	HAL_Delay(1000);
 	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
 	LCD_drawString(&hspi1, xData, 225, continue1, sizeof(continue1), black, 3);
-	LCD_drawString(&hspi1, 80, 255, continue2, sizeof(continue2), black, 3);
+	LCD_drawString(&hspi1, 75, 255, continue2, sizeof(continue2), black, 3);
 
 	while(!start) {
 		// touch screen - implement touch anywhere to start
-		;;
+		pressure = TS_readPressure(&hadc1);
+		if (pressure < 1000) {
+			start = 1;
+			LCD_drawString(&hspi1, 75, 440, running, sizeof(running), magenta, 3);
+		}
 	}
-	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
-
+	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 50, LCD_WIDTH, 310); // initialize to all white screen, except for running message
+//	LCD_drawString(&hspi1, 75, 250, running, sizeof(running), blue, 3);
+//	HAL_Delay(200);
+//	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
+	// HAL_Delay(10000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -218,7 +247,7 @@ int main(void)
 			return 0;
 		}
 
-		HAL_UART_Receive(&huart4, read_buf, sizeof(read_buf), 100);
+		HAL_UART_Receive(&huart4, read_buf, sizeof(read_buf), 1000);
 
 		x = (read_buf[1]<<8) + read_buf[0];
 		y = (read_buf[3]<<8) + read_buf[2];
@@ -227,38 +256,76 @@ int main(void)
 		accel_data[0] = x;
 		accel_data[1] = y;
 		accel_data[2] = z;
+		accel = 0;
 
 		for (int i = 0; i < 3; i++){
-			accel_data[i] *= accel_data[i] * 0.101972;    // convert m/s^2 to g
+			accel_data[i] = fabs(accel_data[i] * 0.101972);    // convert m/s^2 to g
+			accel_data[i] *= accel_data[i];
+			accel += (uint32_t)accel_data[i];
+		}
+		accel = sqrt(accel);
+//		accel /= 11;
+
+		if (accel > max) {
+			max = accel;
 		}
 
-		accel = x*x + y*y + z*z;
-		accel = sqrt(accel);
+		// TODO: fix itoa output, proper acceleration not being displayed
 
 		if (accel >= 58) {    // check if threshold is met/exceeded; using 58 to account for rounding error
-			// activate buzzer for 3 secs after concussion detected
 			button = 0;
-			HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 100);
-			while (!button) {	// after concussion is detected, infinitely loop until blue button is pushed
-				LCD_drawString(&hspi1, xData, yData, concussion_message1, sizeof(concussion_message1), red, 5);
-				LCD_drawString(&hspi1, 20, 75, concussion_message2, sizeof(concussion_message2), red, 5);
-				LCD_drawString(&hspi1, 50, 175, concussion_message5, sizeof(concussion_message5), blue, 15);
-				LCD_drawString(&hspi1, 50, 400, concussion_message3, sizeof(concussion_message3), red, 4);
-				LCD_drawString(&hspi1, 50, 450, concussion_message4, sizeof(concussion_message4), red, 4);
-//				button = GPIO_ReadPin(GPIOB, GPIO_PIN_13);	// set blue button to PB13
-				HAL_Delay(50);
+			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
+			HAL_GPIO_WritePin(GPIOF, GPIO_PIN_5, GPIO_PIN_SET);
+//			HAL_Delay(500);
+			HAL_GPIO_WritePin(GPIOF, GPIO_PIN_5, GPIO_PIN_RESET);
+			LCD_drawString(&hspi1, xData, yData, concussion_message1, sizeof(concussion_message1), red, 5);
+			LCD_drawString(&hspi1, 20, 75, concussion_message2, sizeof(concussion_message2), red, 5);
+			itoa(accel, &buffer[0], 10);
+			LCD_drawString(&hspi1, 20, 190, buffer, sizeof(buffer), red, 10);
+			LCD_drawChar(&hspi1, 220, 190, g, red, 10);
+//			LCD_drawString(&hspi1, 100, 320, concussion_message5, sizeof(concussion_message5), blue, 5);
+			LCD_drawString(&hspi1, 50, 390, concussion_message3, sizeof(concussion_message3), red, 4);
+			LCD_drawString(&hspi1, 50, 430, concussion_message4, sizeof(concussion_message4), red, 4);
+
+			while (!button) {
+				pressure = TS_readPressure(&hadc1);
+				if (pressure < 1000) {
+					button = 1;
+				}
 			}
 			flag = 1;
 		}
 		if (flag) {
 			button = 0;
 			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
-			LCD_drawString(&hspi1, xData, yData, no_concussion, sizeof(no_concussion), black, 5);
+			LCD_drawString(&hspi1, 65, 0, highest, sizeof(highest), black, 4);		// display "highest acceleration so far: ____ g"
+			LCD_drawString(&hspi1, 17, 40, highest1, sizeof(highest1), black, 4);
+			LCD_drawString(&hspi1, 65, 80, highest2, sizeof(highest2), black, 4);
+			itoa(max, &buffer[0], 10);
+			LCD_drawString(&hspi1, 80, 150, buffer, sizeof(buffer), red, 5);
+			LCD_drawChar(&hspi1, 180, 150, g, red, 5);
 			flag = 0;
 		}
-
-
-		HAL_Delay(50);
+		else {
+			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 310, LCD_WIDTH, LCD_HEIGHT);
+			LCD_drawString(&hspi1, 65, 0, highest, sizeof(highest), black, 4);		// display "highest acceleration so far: ____ g"
+			LCD_drawString(&hspi1, 17, 40, highest1, sizeof(highest1), black, 4);
+			LCD_drawString(&hspi1, 65, 80, highest2, sizeof(highest2), black, 4);
+			itoa(max, &buffer[0], 10);
+			if (max < 58) {
+				LCD_drawString(&hspi1, 80, 150, buffer, sizeof(buffer), green, 5);
+				LCD_drawChar(&hspi1, 180, 150, g, green, 5);
+			}
+			else {
+				LCD_drawString(&hspi1, 80, 150, buffer, sizeof(buffer), red, 5);
+				LCD_drawChar(&hspi1, 180, 150, g, red, 5);
+			}
+		}
+		LCD_drawString(&hspi1, 65, 220, current, sizeof(current), black, 4);
+		LCD_drawString(&hspi1, 17, 260, current2, sizeof(current2), black, 4);
+		itoa(accel, &buffer[0], 10);
+		LCD_drawString(&hspi1, 80, 310, buffer, sizeof(buffer), black, 5);
+		LCD_drawChar(&hspi1, 180, 310, g, black, 5);
 	}
 
   /* USER CODE END 3 */
@@ -306,6 +373,64 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.LowPowerAutoWait = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc1.Init.OversamplingMode = DISABLE;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -386,7 +511,7 @@ static void MX_UART4_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart4) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(&huart4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -417,7 +542,7 @@ static void MX_GPIO_Init(void)
   HAL_PWREx_EnableVddIO2();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOF, GPIO_PIN_5|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PE2 PE3 */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
@@ -435,6 +560,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PF5 PF12 PF13 PF14 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
   /*Configure GPIO pin : PF7 */
   GPIO_InitStruct.Pin = GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -442,20 +574,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF13_SAI1;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PC0 PC1 PC2 PC3
-                           PC4 PC5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
-                          |GPIO_PIN_4|GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG_ADC_CONTROL;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA3 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG_ADC_CONTROL;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PB0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -465,24 +583,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG_ADC_CONTROL;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
   /*Configure GPIO pins : PB2 PB6 */
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PF12 PF13 PF14 */
-  GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PE7 PE8 PE9 PE10
                            PE11 PE12 PE13 */
