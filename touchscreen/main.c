@@ -105,7 +105,6 @@ int main(void)
   // ------------------RECEIVE/SCREEN CODE -----------------------
   	uint8_t read_buf[6];
 	uint8_t calibration[6] = {0};
-//	uint8_t end_calib[3] = {0};
 	int16_t x, y, z;
 	int16_t black = HX8357_BLACK;
 	int16_t red = HX8357_RED;
@@ -114,8 +113,8 @@ int main(void)
 	int16_t magenta = HX8357_MAGENTA;
 	int16_t xData = 30;
 	int16_t yData = 15;
-	uint32_t accel;
-	uint32_t max = 0;
+	double accel;
+	double max = 0;
 	uint8_t flag = 0;
 	uint8_t start = 0;
 	double pressure;
@@ -144,94 +143,89 @@ int main(void)
 	unsigned char current2[] = "acceleration:";
 	unsigned char buffer[3];
 	GPIO_PinState button = 0;
-//	HAL_UART_Transmit(&huart4, (uint8_t*) gyro, sizeof(gyro), 100);
-	HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 1000);
-//	HAL_UART_Receive(&huart4, end_calib, sizeof(end_calib), 100);
 
-	LCD_begin(&hspi1);
-	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
-	if (calibration[1] > 0x00 || calibration[2] > 0x00 || calibration[3] > 0x00 || calibration[4] > 0x00 || calibration[5] > 0x00) {
-		LCD_drawString(&hspi1, 40, 240, calibrated, sizeof(calibrated), green, 4);
-	}
-	else {
-		LCD_drawString(&hspi1, xData, yData, calib_message, sizeof(calib_message), black, 4);
-		LCD_drawString(&hspi1, 80, 75, calib_message1, sizeof(calib_message1), black, 4);
-		LCD_drawString(&hspi1, 0, 150, orientation, sizeof(orientation), black, 3);
-		LCD_drawString(&hspi1, 0, 250, gyro, sizeof(gyro), black, 3);
-		LCD_drawString(&hspi1, 0, 350, acc, sizeof(acc), black, 3);
-		LCD_drawString(&hspi1, 0, 450, mag, sizeof(mag), black, 3);
+	HAL_UART_Receive(&huart4, calibration, sizeof(calibration), HAL_MAX_DELAY);
 
-		if (((calibration[0] & 0b11000000) >> 6) == 0b11) {
-			LCD_drawString(&hspi1, 225, 140, check, sizeof(check), green, 5);
-		}
-		else {
-			LCD_drawString(&hspi1, 225, 140, check, sizeof(check), red, 5);
-		}
-		if (((calibration[0] & 0b00110000) >> 4) == 0b11) {
-			LCD_drawString(&hspi1, 190, 240, check, sizeof(check), green, 5);
-		}
-		else {
-			LCD_drawString(&hspi1, 190, 240, check, sizeof(check), red, 5);
-		}
-		if (((calibration[0] & 0b00001100) >> 2) == 0b11) {
-			LCD_drawString(&hspi1, 265, 340, check, sizeof(check), green, 5);
-		}
-		else {
-			LCD_drawString(&hspi1, 265, 340, check, sizeof(check), red, 5);
-		}
-		if ((calibration[0] & 0b00000011) == 0b11) {
-			LCD_drawString(&hspi1, 250, 440, check, sizeof(check), green, 5);
-		}
-		else {
-			LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
-		}
-
-		while (calibration[0] != 0b11111111) {
-			HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 1000);
-			if (((calibration[0] & 0b11000000) >> 6) == 0b11) {
-				LCD_drawString(&hspi1, 225, 140, check, sizeof(check), green, 5);
-			}
-			else {
-				LCD_drawString(&hspi1, 225, 140, check, sizeof(check), red, 5);
-			}
-			if (((calibration[0] & 0b00110000) >> 4) == 0b11) {
-				LCD_drawString(&hspi1, 190, 240, check, sizeof(check), green, 5);
-			}
-			else {
-				LCD_drawString(&hspi1, 190, 240, check, sizeof(check), red, 5);
-			}
-			if (((calibration[0] & 0b00001100) >> 2) == 0b11) {
-				LCD_drawString(&hspi1, 265, 340, check, sizeof(check), green, 5);
-			}
-			else {
-				LCD_drawString(&hspi1, 265, 340, check, sizeof(check), red, 5);
-			}
-			if ((calibration[0] & 0b00000011) == 0b11) {
-				LCD_drawString(&hspi1, 250, 440, check, sizeof(check), green, 5);
-			}
-			else {
-				LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
-			}
-		}
-	}
-//	HAL_Delay(1000);
-	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
-	LCD_drawString(&hspi1, xData, 225, continue1, sizeof(continue1), black, 3);
-	LCD_drawString(&hspi1, 75, 255, continue2, sizeof(continue2), black, 3);
-
-	while(!start) {
-		// touch screen - implement touch anywhere to start
-		pressure = TS_readPressure(&hadc1);
-		if (pressure < 1000) {
-			start = 1;
-			LCD_drawString(&hspi1, 75, 440, running, sizeof(running), magenta, 3);
-		}
-	}
-	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 50, LCD_WIDTH, 310); // initialize to all white screen, except for running message
-//	LCD_drawString(&hspi1, 75, 250, running, sizeof(running), blue, 3);
-//	HAL_Delay(200);
+//	LCD_begin(&hspi1);
 //	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
-	// HAL_Delay(10000);
+//	if (calibration[1] > 0x00 || calibration[2] > 0x00 || calibration[3] > 0x00 || calibration[4] > 0x00 || calibration[5] > 0x00) {
+//		LCD_drawString(&hspi1, 40, 240, calibrated, sizeof(calibrated), green, 4);
+//	}
+//	else {
+//		LCD_drawString(&hspi1, xData, yData, calib_message, sizeof(calib_message), black, 4);
+//		LCD_drawString(&hspi1, 80, 75, calib_message1, sizeof(calib_message1), black, 4);
+//		LCD_drawString(&hspi1, 0, 150, orientation, sizeof(orientation), black, 3);
+//		LCD_drawString(&hspi1, 0, 250, gyro, sizeof(gyro), black, 3);
+//		LCD_drawString(&hspi1, 0, 350, acc, sizeof(acc), black, 3);
+//		LCD_drawString(&hspi1, 0, 450, mag, sizeof(mag), black, 3);
+//
+//		if (((calibration[0] & 0b11000000) >> 6) == 0b11) {
+//			LCD_drawString(&hspi1, 225, 140, check, sizeof(check), green, 5);
+//		}
+//		else {
+//			LCD_drawString(&hspi1, 225, 140, check, sizeof(check), red, 5);
+//		}
+//		if (((calibration[0] & 0b00110000) >> 4) == 0b11) {
+//			LCD_drawString(&hspi1, 190, 240, check, sizeof(check), green, 5);
+//		}
+//		else {
+//			LCD_drawString(&hspi1, 190, 240, check, sizeof(check), red, 5);
+//		}
+//		if (((calibration[0] & 0b00001100) >> 2) == 0b11) {
+//			LCD_drawString(&hspi1, 265, 340, check, sizeof(check), green, 5);
+//		}
+//		else {
+//			LCD_drawString(&hspi1, 265, 340, check, sizeof(check), red, 5);
+//		}
+//		if ((calibration[0] & 0b00000011) == 0b11) {
+//			LCD_drawString(&hspi1, 250, 440, check, sizeof(check), green, 5);
+//		}
+//		else {
+//			LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
+//		}
+//
+//		while (calibration[0] != 0b11111111) {
+//			HAL_UART_Receive(&huart4, calibration, sizeof(calibration), 1000);
+//			if (((calibration[0] & 0b11000000) >> 6) == 0b11) {
+//				LCD_drawString(&hspi1, 225, 140, check, sizeof(check), green, 5);
+//			}
+//			else {
+//				LCD_drawString(&hspi1, 225, 140, check, sizeof(check), red, 5);
+//			}
+//			if (((calibration[0] & 0b00110000) >> 4) == 0b11) {
+//				LCD_drawString(&hspi1, 190, 240, check, sizeof(check), green, 5);
+//			}
+//			else {
+//				LCD_drawString(&hspi1, 190, 240, check, sizeof(check), red, 5);
+//			}
+//			if (((calibration[0] & 0b00001100) >> 2) == 0b11) {
+//				LCD_drawString(&hspi1, 265, 340, check, sizeof(check), green, 5);
+//			}
+//			else {
+//				LCD_drawString(&hspi1, 265, 340, check, sizeof(check), red, 5);
+//			}
+//			if ((calibration[0] & 0b00000011) == 0b11) {
+//				LCD_drawString(&hspi1, 250, 440, check, sizeof(check), green, 5);
+//			}
+//			else {
+//				LCD_drawString(&hspi1, 250, 440, check, sizeof(check), red, 5);
+//			}
+//		}
+//	}
+//	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
+//	LCD_drawString(&hspi1, xData, 225, continue1, sizeof(continue1), black, 3);
+//	LCD_drawString(&hspi1, 75, 255, continue2, sizeof(continue2), black, 3);
+//
+//	while(!start) {
+//		// touch screen - implement touch anywhere to start
+//		pressure = TS_readPressure(&hadc1);
+//		if (pressure < 1000) {
+//			start = 1;
+//			LCD_drawString(&hspi1, 75, 440, running, sizeof(running), magenta, 3);
+//		}
+//	}
+//	LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 50, LCD_WIDTH, 310); // initialize to all white screen, except for running message
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -242,12 +236,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-		if (HAL_UART_Init(&huart4) != HAL_OK) {
-			printf("failed");
-			return 0;
-		}
-
-		HAL_UART_Receive(&huart4, read_buf, sizeof(read_buf), 1000);
+		HAL_UART_Receive(&huart4, read_buf, sizeof(read_buf), HAL_MAX_DELAY);
 
 		x = (read_buf[1]<<8) + read_buf[0];
 		y = (read_buf[3]<<8) + read_buf[2];
@@ -261,7 +250,7 @@ int main(void)
 		for (int i = 0; i < 3; i++){
 			accel_data[i] = fabs(accel_data[i] * 0.101972);    // convert m/s^2 to g
 			accel_data[i] *= accel_data[i];
-			accel += (uint32_t)accel_data[i];
+			accel += accel_data[i];
 		}
 		accel = sqrt(accel);
 //		accel /= 11;
@@ -272,60 +261,60 @@ int main(void)
 
 		// TODO: fix itoa output, proper acceleration not being displayed
 
-		if (accel >= 58) {    // check if threshold is met/exceeded; using 58 to account for rounding error
-			button = 0;
-			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
-			HAL_GPIO_WritePin(GPIOF, GPIO_PIN_5, GPIO_PIN_SET);
-//			HAL_Delay(500);
-			HAL_GPIO_WritePin(GPIOF, GPIO_PIN_5, GPIO_PIN_RESET);
-			LCD_drawString(&hspi1, xData, yData, concussion_message1, sizeof(concussion_message1), red, 5);
-			LCD_drawString(&hspi1, 20, 75, concussion_message2, sizeof(concussion_message2), red, 5);
-			itoa(accel, &buffer[0], 10);
-			LCD_drawString(&hspi1, 20, 190, buffer, sizeof(buffer), red, 10);
-			LCD_drawChar(&hspi1, 220, 190, g, red, 10);
-//			LCD_drawString(&hspi1, 100, 320, concussion_message5, sizeof(concussion_message5), blue, 5);
-			LCD_drawString(&hspi1, 50, 390, concussion_message3, sizeof(concussion_message3), red, 4);
-			LCD_drawString(&hspi1, 50, 430, concussion_message4, sizeof(concussion_message4), red, 4);
-
-			while (!button) {
-				pressure = TS_readPressure(&hadc1);
-				if (pressure < 1000) {
-					button = 1;
-				}
-			}
-			flag = 1;
-		}
-		if (flag) {
-			button = 0;
-			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
-			LCD_drawString(&hspi1, 65, 0, highest, sizeof(highest), black, 4);		// display "highest acceleration so far: ____ g"
-			LCD_drawString(&hspi1, 17, 40, highest1, sizeof(highest1), black, 4);
-			LCD_drawString(&hspi1, 65, 80, highest2, sizeof(highest2), black, 4);
-			itoa(max, &buffer[0], 10);
-			LCD_drawString(&hspi1, 80, 150, buffer, sizeof(buffer), red, 5);
-			LCD_drawChar(&hspi1, 180, 150, g, red, 5);
-			flag = 0;
-		}
-		else {
-			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 310, LCD_WIDTH, LCD_HEIGHT);
-			LCD_drawString(&hspi1, 65, 0, highest, sizeof(highest), black, 4);		// display "highest acceleration so far: ____ g"
-			LCD_drawString(&hspi1, 17, 40, highest1, sizeof(highest1), black, 4);
-			LCD_drawString(&hspi1, 65, 80, highest2, sizeof(highest2), black, 4);
-			itoa(max, &buffer[0], 10);
-			if (max < 58) {
-				LCD_drawString(&hspi1, 80, 150, buffer, sizeof(buffer), green, 5);
-				LCD_drawChar(&hspi1, 180, 150, g, green, 5);
-			}
-			else {
-				LCD_drawString(&hspi1, 80, 150, buffer, sizeof(buffer), red, 5);
-				LCD_drawChar(&hspi1, 180, 150, g, red, 5);
-			}
-		}
-		LCD_drawString(&hspi1, 65, 220, current, sizeof(current), black, 4);
-		LCD_drawString(&hspi1, 17, 260, current2, sizeof(current2), black, 4);
-		itoa(accel, &buffer[0], 10);
-		LCD_drawString(&hspi1, 80, 310, buffer, sizeof(buffer), black, 5);
-		LCD_drawChar(&hspi1, 180, 310, g, black, 5);
+//		if (accel >= 58) {    // check if threshold is met/exceeded; using 58 to account for rounding error
+//			button = 0;
+//			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
+//			HAL_GPIO_WritePin(GPIOF, GPIO_PIN_5, GPIO_PIN_SET);
+////			HAL_Delay(500);
+//			HAL_GPIO_WritePin(GPIOF, GPIO_PIN_5, GPIO_PIN_RESET);
+//			LCD_drawString(&hspi1, xData, yData, concussion_message1, sizeof(concussion_message1), red, 5);
+//			LCD_drawString(&hspi1, 20, 75, concussion_message2, sizeof(concussion_message2), red, 5);
+//			itoa(accel, &buffer[0], 10);
+//			LCD_drawString(&hspi1, 20, 190, buffer, sizeof(buffer), red, 10);
+//			LCD_drawChar(&hspi1, 220, 190, g, red, 10);
+////			LCD_drawString(&hspi1, 100, 320, concussion_message5, sizeof(concussion_message5), blue, 5);
+//			LCD_drawString(&hspi1, 50, 390, concussion_message3, sizeof(concussion_message3), red, 4);
+//			LCD_drawString(&hspi1, 50, 430, concussion_message4, sizeof(concussion_message4), red, 4);
+//
+//			while (!button) {
+//				pressure = TS_readPressure(&hadc1);
+//				if (pressure < 1000) {
+//					button = 1;
+//				}
+//			}
+//			flag = 1;
+//		}
+//		if (flag) {
+//			button = 0;
+//			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 0, LCD_WIDTH, LCD_HEIGHT); // initialize to all white screen
+//			LCD_drawString(&hspi1, 65, 0, highest, sizeof(highest), black, 4);		// display "highest acceleration so far: ____ g"
+//			LCD_drawString(&hspi1, 17, 40, highest1, sizeof(highest1), black, 4);
+//			LCD_drawString(&hspi1, 65, 80, highest2, sizeof(highest2), black, 4);
+//			itoa(max, &buffer[0], 10);
+//			LCD_drawString(&hspi1, 80, 150, buffer, sizeof(buffer), red, 5);
+//			LCD_drawChar(&hspi1, 180, 150, g, red, 5);
+//			flag = 0;
+//		}
+//		else {
+//			LCD_writePixels(&hspi1, LCD_color565(255,255,255), 0, 310, LCD_WIDTH, LCD_HEIGHT);
+//			LCD_drawString(&hspi1, 65, 0, highest, sizeof(highest), black, 4);		// display "highest acceleration so far: ____ g"
+//			LCD_drawString(&hspi1, 17, 40, highest1, sizeof(highest1), black, 4);
+//			LCD_drawString(&hspi1, 65, 80, highest2, sizeof(highest2), black, 4);
+//			itoa(max, &buffer[0], 10);
+//			if (max < 58) {
+//				LCD_drawString(&hspi1, 80, 150, buffer, sizeof(buffer), green, 5);
+//				LCD_drawChar(&hspi1, 180, 150, g, green, 5);
+//			}
+//			else {
+//				LCD_drawString(&hspi1, 80, 150, buffer, sizeof(buffer), red, 5);
+//				LCD_drawChar(&hspi1, 180, 150, g, red, 5);
+//			}
+//		}
+//		LCD_drawString(&hspi1, 65, 220, current, sizeof(current), black, 4);
+//		LCD_drawString(&hspi1, 17, 260, current2, sizeof(current2), black, 4);
+//		itoa(accel, &buffer[0], 10);
+//		LCD_drawString(&hspi1, 80, 310, buffer, sizeof(buffer), black, 5);
+//		LCD_drawChar(&hspi1, 180, 310, g, black, 5);
 	}
 
   /* USER CODE END 3 */
