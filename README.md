@@ -6,6 +6,8 @@ This product is marketed to athletes who participate in contact sports or sports
 ## Approach
 This approach contains two modules: the concussion sensor, which tracks the acceleration of the head and transmits the data, and the display module, which receives the acceleration data and alerts the user of potential head trauma. The concussion sensor is positioned behind one of the subject’s ears using an adhesive. It contains an IMU, an Xbee, a Nucleo and a battery. The IMU measures the acceleration and absolute orientation of the head of the user and uses the Xbee to transmit the data from the sensor to a second Xbee within the display module of the user. Within the display module, the receiving Xbee transmits the acceleration data to the second Nucleo, which processes the data and determines if the acceleration meets the threshold of 65.1 g. If the threshold is reached, a warning of the concussion data is displayed on a LCD display in the display module to alert the user.
 ### Head-mounted IMU sensor
+
+<img src="https://github.com/dhipatel21/Concussion-Detector/blob/d0866d62d8efe2876bd440115b1fc58cb325f082/sensor_module.png" alt="drawing" width="400"/>
 Connect IMU; gather acceleration data measurements and transmit through Xbee
 The head mounted sensor is responsible for collecting acceleration and orientation data (through the IMU) and transmitting the data wirelessly to the display unit via an Xbee pair. The Bosch BNO055 serves as our IMU for this purpose, which we selected because the sensor does its own data filtering and noise reduction, as well as calculates linear acceleration. We use the absolute orientation and linear acceleration data to determine if the concussion threshold has been reached. This raw data is transmitted to the display module, where data is processed to see if the threshold has been met. The head-mounted sensor is attached behind the right ear of the user by KT tape, a brand of reliable and waterproof athletic tape.
 
@@ -14,9 +16,8 @@ The head mounted sensor is responsible for collecting acceleration and orientati
 The Nucleo uses constant polling and a timer-based interrupt to determine peaks in acceleration. The IMU constantly measures acceleration, and the Nucleo uses a timer to trigger an interrupt every two seconds. The Nucleo receives data from the Xbee using I2C. When the interrupt is triggered, the maximum acceleration across those two seconds is recorded and is transmitted to the Xbee using UART. The Xbee then transmits this determined peak acceleration to the Xbee in the display module.
 
 ### Display Module: Signal Processing and Delay Unit
-a. Connect Xbee to the Nucleo and gather data
-b. Create signal processing software to load onto the Nucleo
-c. Create software to display concussion warnings on the LCD display
+
+<img src="https://github.com/dhipatel21/Concussion-Detector/blob/d0866d62d8efe2876bd440115b1fc58cb325f082/display_module.png" alt="drawing" width="400"/>
 The display module’s signal processing and delay unit has three major components: the Xbee to receive the data from the head-mounted sensor, the Nucleo to process the data received on the Xbee, and the LCD display which shows warnings of concussions as well as reminding the user of the calibration sequence. The Nucleo processes the data by processing the raw data from the IMU and measuring if a certain threshold of concussive acceleration has been reached (65.1g in our case). If the threshold is reached, the Nucleo triggers a display on the LCD screen to visually warn the user, as well as triggers the Piezo Buzzer to audibly warn the user.
  
 #### Software
@@ -39,18 +40,18 @@ The wireless system must work in building and be able to work for 3 hours with a
 
 ### Essential System Components
 The following components are necessary to implement an IMU based concussion sensor connected with a watch module to display relevant data and alerts.
-1. Processor
-  a. Nucleo L412KB for concussion sensor module
+1. Processor  
+  a. Nucleo L412KB for concussion sensor module  
   b. Nucleo L4R5ZI-P for display module
-2. Concussion Sensor
-  a. Bosch BNO055 IMU
+2. Concussion Sensor  
+  a. Bosch BNO055 IMU  
   b. 2 x Digi XBee 3 Cellular LTE-M/NB-IoT modem
-3. Watch Display
-  a. TFT Display with Capacitive Touchscreen
+3. Watch Display  
+  a. TFT Display with Capacitive Touchscreen  
   b. Piezo Buzzer PS1240
-4. Power and Batteries
-  a. 2 x 3.7V rechargeable battery
+4. Power and Batteries  
+  a. 2 x 3.7V rechargeable battery  
   b. TC 1262 3.3 volt regulator
-5. Enclosures and Adhesives
-  a. KT Athletic Tape
+5. Enclosures and Adhesives  
+  a. KT Athletic Tape  
   b. Mini pod
