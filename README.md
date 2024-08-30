@@ -5,6 +5,9 @@ This product is marketed to athletes who participate in contact sports or sports
 
 ## Approach
 This approach contains two modules: the concussion sensor, which tracks the acceleration of the head and transmits the data, and the display module, which receives the acceleration data and alerts the user of potential head trauma. The concussion sensor is positioned behind one of the subject’s ears using an adhesive. It contains an IMU, an Xbee, a Nucleo and a battery. The IMU measures the acceleration and absolute orientation of the head of the user and uses the Xbee to transmit the data from the sensor to a second Xbee within the display module of the user. Within the display module, the receiving Xbee transmits the acceleration data to the second Nucleo, which processes the data and determines if the acceleration meets the threshold of 65.1 g. If the threshold is reached, a warning of the concussion data is displayed on a LCD display in the display module to alert the user.
+
+<img src="https://github.com/dhipatel21/Concussion-Detector/blob/0ae653e87ea01469df88b1361604cb1399846fd1/comm.png" alt="drawing" width="400"/>
+
 ### Head-mounted IMU sensor
 
 <img src="https://github.com/dhipatel21/Concussion-Detector/blob/d0866d62d8efe2876bd440115b1fc58cb325f082/sensor_module.png" alt="drawing" width="400"/>
